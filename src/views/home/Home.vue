@@ -1,113 +1,15 @@
 <template>
   <div id="home">
     <nav-bar class="home-nav"><div slot="center">购物街</div></nav-bar>
-    <home-swiper :banners="banners"></home-swiper>
-    <recommend-view :recommends="recommends"></recommend-view>
-    <feature-view></feature-view>
-    <tab-control :titles="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"></tab-control>
-    <goods-list :goods="showGoods"></goods-list>
-    <ul>
-      <li>列表：1</li>
-      <li>列表：2</li>
-      <li>列表：3</li>
-      <li>列表：4</li>
-      <li>列表：5</li>
-      <li>列表：6</li>
-      <li>列表：7</li>
-      <li>列表：8</li>
-      <li>列表：9</li>
-      <li>列表：10</li>
-      <li>列表：11</li>
-      <li>列表：12</li>
-      <li>列表：13</li>
-      <li>列表：14</li>
-      <li>列表：15</li>
-      <li>列表：16</li>
-      <li>列表：17</li>
-      <li>列表：18</li>
-      <li>列表：19</li>
-      <li>列表：20</li>
-      <li>列表：21</li>
-      <li>列表：22</li>
-      <li>列表：23</li>
-      <li>列表：24</li>
-      <li>列表：25</li>
-      <li>列表：26</li>
-      <li>列表：27</li>
-      <li>列表：28</li>
-      <li>列表：29</li>
-      <li>列表：30</li>
-      <li>列表：31</li>
-      <li>列表：32</li>
-      <li>列表：33</li>
-      <li>列表：34</li>
-      <li>列表：35</li>
-      <li>列表：36</li>
-      <li>列表：37</li>
-      <li>列表：38</li>
-      <li>列表：39</li>
-      <li>列表：40</li>
-      <li>列表：41</li>
-      <li>列表：42</li>
-      <li>列表：43</li>
-      <li>列表：44</li>
-      <li>列表：45</li>
-      <li>列表：46</li>
-      <li>列表：47</li>
-      <li>列表：48</li>
-      <li>列表：49</li>
-      <li>列表：50</li>
-      <li>列表：51</li>
-      <li>列表：52</li>
-      <li>列表：53</li>
-      <li>列表：54</li>
-      <li>列表：55</li>
-      <li>列表：56</li>
-      <li>列表：57</li>
-      <li>列表：58</li>
-      <li>列表：59</li>
-      <li>列表：60</li>
-      <li>列表：61</li>
-      <li>列表：62</li>
-      <li>列表：63</li>
-      <li>列表：64</li>
-      <li>列表：65</li>
-      <li>列表：66</li>
-      <li>列表：67</li>
-      <li>列表：68</li>
-      <li>列表：69</li>
-      <li>列表：70</li>
-      <li>列表：71</li>
-      <li>列表：72</li>
-      <li>列表：73</li>
-      <li>列表：74</li>
-      <li>列表：75</li>
-      <li>列表：76</li>
-      <li>列表：77</li>
-      <li>列表：78</li>
-      <li>列表：79</li>
-      <li>列表：80</li>
-      <li>列表：81</li>
-      <li>列表：82</li>
-      <li>列表：83</li>
-      <li>列表：84</li>
-      <li>列表：85</li>
-      <li>列表：86</li>
-      <li>列表：87</li>
-      <li>列表：88</li>
-      <li>列表：89</li>
-      <li>列表：90</li>
-      <li>列表：91</li>
-      <li>列表：92</li>
-      <li>列表：93</li>
-      <li>列表：94</li>
-      <li>列表：95</li>
-      <li>列表：96</li>
-      <li>列表：97</li>
-      <li>列表：98</li>
-      <li>列表：99</li>
-      <li>列表：100</li>
-    </ul>
+    <tab-control :titles="['流行','新款','精选']" class="tab-control" @tabClick="tabClick" ref="tabControl1" v-show="isShow"></tab-control>
+    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" @pullUpLoad="pullUpLoad" :pull-up-load="true">
+      <home-swiper :banners="banners" @swiperImgLoad='swiperImgLoad'></home-swiper>
+      <recommend-view :recommends="recommends"></recommend-view>
+      <feature-view></feature-view>
+      <tab-control :titles="['流行','新款','精选']"  @tabClick="tabClick" ref="tabControl2"></tab-control>
+      <goods-list :goods="showGoods"></goods-list>
+    </scroll>
+    <back-top @click.native="backClick" v-show="backTopIsShow"></back-top>
   </div>
 </template>
 
@@ -119,8 +21,12 @@ import FeatureView from './childComps/FeatureView'
 import NavBar from 'components/common/navbar/NavBar'
 import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goods/GoodsList'
+import Scroll from 'components/common/scroll/Scroll'
+import BackTop from 'components/content/backTop/BackTop'
 
 import {getHomeMultidata,getHomeGoods} from 'network/home'
+import {debounce} from 'common/utils'
+
 export default {
   name: "Home",
   data(){
@@ -132,7 +38,11 @@ export default {
         'new':{page:0,list:[]},
         'sell':{page:0,list:[]}
       },
-      currentType:'pop'
+      currentType:'pop',
+      backTopIsShow:false,
+      tabOffsetTop:0,
+      isShow:false,
+      saveY:0
     }
   },
   created(){
@@ -140,6 +50,20 @@ export default {
     this.getHomeGoods('pop'),
     this.getHomeGoods('new'),
     this.getHomeGoods('sell')
+  },
+  mounted(){
+    const refresh=debounce(this.$refs.scroll.refresh,500)
+    this.$bus.$on('itemImgLoad',()=>{
+      refresh()
+    })
+  },
+  activated(){
+    this.$refs.scroll.refresh()
+    this.$refs.scroll.scrollTo(0,this.saveY,0)
+    
+  },
+  deactivated(){
+    this.saveY = this.$refs.scroll.getScrollY()
   },
   methods:{
     getHomeMultidata(){
@@ -155,6 +79,7 @@ export default {
         // console.log(res)
         this.goods[type].list.push(...res.data.list)
         this.goods[type].page += 1
+        this.$refs.scroll.finishPullUp()
       })
     },
     tabClick(index){
@@ -166,6 +91,24 @@ export default {
         case 2:this.currentType='sell'
               break
       }
+      this.$refs.tabControl1.currentIndex = index
+      this.$refs.tabControl2.currentIndex = index
+    },
+    backClick(){
+      this.$refs.scroll.scrollTo(0,0,500)
+    },
+    contentScroll(position){
+      // console.log(position)
+      this.backTopIsShow = (-position.y) > 1000
+      this.isShow = (-position.y) > this.tabOffsetTop
+    },
+    pullUpLoad(){
+      this.getHomeGoods(this.currentType)
+      
+    },
+    swiperImgLoad(){
+      this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
+      console.log(this.tabOffsetTop)
     }
   },
   computed:{
@@ -179,29 +122,53 @@ export default {
     FeatureView,
     NavBar,
     TabControl,
-    GoodsList
+    GoodsList,
+    Scroll,
+    BackTop
   }
 }
 </script>
 
-<style>
+<style scoped>
   .home-nav{
     color:white;
     background-color: var(--color-tint);
-    position: fixed;
-    top: 0;
+    position: relative;
+    /* top: 0;
     left: 0;
-    right: 0;
+    right: 0; */
     z-index: 10;
   }
 
   #home{
-    padding-top: 44px;
+    /* padding-top: 44px; */
+    position: relative;
+    height: 100vh;
   }
 
-  .tab-control{
+  /* .tab-control{
     position: sticky;
     top: 44px;
     z-index: 10;
+  } */
+
+  .tab-control{
+    position: relative;
+    z-index: 10;
   }
+
+  .content{
+    position: absolute;
+    top:44px;
+    bottom: 49px;
+    left: 0;
+    right: 0;
+  }
+
+  /* .fixed{
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 44px;
+  } */
 </style>

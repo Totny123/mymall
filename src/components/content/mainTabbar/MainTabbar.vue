@@ -2,7 +2,7 @@
   <div>
     <tab-bar>
       <tab-bar-item path="/home">
-        <img src="~assets/img/tabbar/home.svg" alt="" slot="item-icon">
+        <img src="~assets/img/tabbar/home.svg" alt="" slot="item-icon" >
         <img src="~assets/img/tabbar/home_active.svg" alt="" slot="item-icon-active">
         <div slot="item-text">首页</div>
       </tab-bar-item>
