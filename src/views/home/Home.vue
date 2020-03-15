@@ -108,7 +108,7 @@ export default {
     },
     swiperImgLoad(){
       this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
-      console.log(this.tabOffsetTop)
+      // console.log(this.tabOffsetTop)
     }
   },
   computed:{
